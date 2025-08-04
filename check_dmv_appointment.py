@@ -10,12 +10,16 @@ import time
 
 # --- CONFIGURE YOUR EMAIL SETTINGS ---
 EMAIL_SENDER = "your_email@gmail.com"
-EMAIL_PASSWORD = "your_app_password_here"
-EMAIL_RECIPIENT = "destination_email@example.com"
+EMAIL_PASSWORD = "your_app_password"
+EMAIL_RECIPIENT = "destination@example.com"
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
-# --- Headless Chrome Setup ---
+# --- CONFIGURE YOUR DATE RANGE (inclusive) ---
+DATE_RANGE_START = datetime(2025, 8, 14)
+DATE_RANGE_END = datetime(2025, 9, 30)
+
+# --- SETUP WEBDRIVER ---
 options = Options()
 options.add_argument("--headless")
 driver = webdriver.Chrome(options=options)
@@ -42,7 +46,7 @@ def send_email(subject, body):
         print(f"[-] Failed to send email: {e}")
 
 try:
-    # Step 1: Click "Colorado Springs"
+    # Step 1: Select "Colorado Springs"
     location_buttons = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "DataControlBtn")))
     for btn in location_buttons:
         if "Colorado Springs" in btn.text:
@@ -54,37 +58,43 @@ try:
 
     time.sleep(2)
 
-    # Step 2: Click the service option
+    # Step 2: Select the service
     service_buttons = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "DataControlBtn")))
     for btn in service_buttons:
         if "Renew Colorado Driver License/ID/Permit" in btn.text:
-            print("[DEBUG] Clicking 'Renew Colorado Driver License/ID/Permit'")
+            print("[DEBUG] Clicking service option")
             btn.click()
             break
     else:
-        raise Exception("Could not find desired service option.")
+        raise Exception("Service option not found.")
 
     time.sleep(3)
 
-    # Step 3: Extract appointment time
+    # Step 3: Get the appointment datetime
     time_slot = wait.until(EC.presence_of_element_located((By.ID, "SingleDateTime")))
     raw_datetime = time_slot.get_attribute("data-datetime")
-    print(f"[+] Found appointment slot: {raw_datetime}")
+    print(f"[DEBUG] Raw appointment string: {raw_datetime}")
 
+    # Parse to datetime object
     try:
         parsed = datetime.strptime(raw_datetime, "%m/%d/%Y %I:%M:%S %p")
-        formatted = parsed.strftime("%A, %B %d, %Y at %I:%M %p")
-    except Exception:
-        formatted = raw_datetime
+        print(f"[DEBUG] Parsed appointment datetime: {parsed}")
+    except ValueError:
+        raise Exception(f"Could not parse datetime from: {raw_datetime}")
 
-    message_body = f"Earliest available appointment: {formatted}"
-    send_email("Colorado Springs DMV Appointment Found", message_body)
+    # Step 4: Check if appointment is within range
+    if DATE_RANGE_START <= parsed <= DATE_RANGE_END:
+        formatted = parsed.strftime("%A, %B %d, %Y at %I:%M %p")
+        subject = "DMV Appointment Available Within Your Date Range"
+        body = f"Good news! An appointment is available:\n\n{formatted}"
+        send_email(subject, body)
+    else:
+        print(f"[INFO] Appointment found, but outside of range: {parsed.strftime('%Y-%m-%d')}")
 
 except Exception as e:
     print("[-] ERROR:", e)
-    send_email("DMV Appointment Script Error", f"An error occurred: {e}")
+    send_email("DMV Script Error", f"An error occurred:\n\n{e}")
 
 finally:
     print("[DEBUG] Closing browser.")
     driver.quit()
-# --- END OF SCRIPT ---
