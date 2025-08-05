@@ -8,16 +8,27 @@ from email.mime.text import MIMEText
 from datetime import datetime
 import time
 
+# --- Load Credentials in Your Script ---
+def load_credentials(path="creds.txt"):
+    creds = {}
+    with open(path, "r") as f:
+        for line in f:
+            if "=" in line:
+                key, val = line.strip().split("=", 1)
+                creds[key.strip()] = val.strip()
+    return creds
+creds = load_credentials()
+
 # --- CONFIGURE YOUR EMAIL SETTINGS ---
-EMAIL_SENDER = "your_email@gmail.com"
-EMAIL_PASSWORD = "your_app_password"
-EMAIL_RECIPIENT = "destination@example.com"
+EMAIL_SENDER = creds["EMAIL_USERNAME"]
+EMAIL_PASSWORD = creds["EMAIL_PASSWORD"]
+EMAIL_RECIPIENT = creds["EMAIL_RECIPIENT"]
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
 # --- CONFIGURE YOUR DATE RANGE (inclusive) ---
-DATE_RANGE_START = datetime(2025, 8, 14)
-DATE_RANGE_END = datetime(2025, 9, 30)
+DATE_RANGE_START = datetime(2025, 8, 21)
+DATE_RANGE_END = datetime(2025, 9, 5)
 
 # --- SETUP WEBDRIVER ---
 options = Options()
