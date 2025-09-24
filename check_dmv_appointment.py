@@ -7,28 +7,22 @@ import smtplib
 from email.mime.text import MIMEText
 from datetime import datetime
 import time
-
-# --- Load Credentials in Your Script ---
-def load_credentials(path="creds.txt"):
-    creds = {}
-    with open(path, "r") as f:
-        for line in f:
-            if "=" in line:
-                key, val = line.strip().split("=", 1)
-                creds[key.strip()] = val.strip()
-    return creds
-creds = load_credentials()
+import os
+from dotenv import load_dotenv
+  
+# --- Load Environment Variables ---  
+load_dotenv()
 
 # --- CONFIGURE YOUR EMAIL SETTINGS ---
-EMAIL_SENDER = creds["EMAIL_USERNAME"]
-EMAIL_PASSWORD = creds["EMAIL_PASSWORD"]
-EMAIL_RECIPIENT = creds["EMAIL_RECIPIENT"]
+EMAIL_SENDER = os.getenv("EMAIL_USERNAME")
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
+EMAIL_RECIPIENT = os.getenv("EMAIL_RECIPIENT")
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
 # --- CONFIGURE YOUR DATE RANGE (inclusive) ---
-DATE_RANGE_START = datetime(2025, 8, 21)
-DATE_RANGE_END = datetime(2025, 9, 5)
+DATE_RANGE_START = datetime.now()
+DATE_RANGE_END = datetime(2025, 10, 10)
 
 # --- SETUP WEBDRIVER ---
 options = Options()
@@ -79,7 +73,7 @@ try:
     else:
         raise Exception("Service option not found.")
 
-    time.sleep(3)
+    time.sleep(5)
 
     # Step 3: Get the appointment datetime
     time_slot = wait.until(EC.presence_of_element_located((By.ID, "SingleDateTime")))
